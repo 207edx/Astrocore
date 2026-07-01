@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTROCORE | Mission Control</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+<style>
+:root {
+    --glow: #00f3ff;
+    --accent: #ff0055;
+    --dark-bg: #05070a;
+    --panel-border: rgba(0, 243, 255, 0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+
+body {
+    background: var(--dark-bg);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+}
+
+/* ENHANCED HUD EFFECTS */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: 
+        radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%),
+        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%);
+    background-size: 100% 100%, 100% 4px;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* Interactive Warp Background */
+#canvas-stars {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: -1;
+    background: radial-gradient(circle at center, #0a0c14 0%, #020408 100%);
+}
+
+/* Navigation */
+nav {
+    position: fixed;
+    width: 100%;
+    padding: 20px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--panel-border);
+    z-index: 1000;
+}
+
+/* COOLER LOGO */
+.logo {
+    font-family: 'Orbitron';
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #fff, var(--glow), #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 3s linear infinite;
+    filter: drop-shadow(0 0 5px var(--glow));
+}
+
+@keyframes shine {
+    to { background-position: 200% center; }
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: 0.3s;
+    opacity: 0.7;
+}
+
+.nav-links a:hover {
+    color: var(--glow);
+    opacity: 1;
+    text-shadow: 0 0 10px var(--glow);
+}
+
+/* Sections */
+section {
+    min-height: 100vh;
+    padding: 120px 10%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+h2 {
+    font-family: 'Orbitron';
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    letter-spacing: 4px;
+    color: var(--glow);
+    text-transform: uppercase;
+    border-left: 4px solid var(--glow);
+    padding-left: 15px;
+}
+
+/* Glass Panel */
+.glass-panel {
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--panel-border);
+    padding: 40px;
+    border-radius: 2px;
+    position: relative;
+}
+
+.glass-panel::after {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 20px; height: 20px;
+    border-top: 2px solid var(--glow);
+    border-left: 2px solid var(--glow);
+}
+
+/* Mission Cards */
+.mission-card {
+    border: 1px solid #222;
+    padding: 30px;
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.6);
+    transition: 0.4s;
+}
+
+.mission-card:hover {
+    border-color: var(--glow);
+    box-shadow: 0 0 15px rgba(0,243,255,0.2);
+}
+
+/* News Grid */
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: 25px;
+}
+
+.news-card {
+    border: 1px solid #1a1a1a;
+    background: rgba(0,0,0,0.7);
+    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+}
+
+.news-card:hover {
+    border-color: var(--glow);
+    transform: translateY(-10px);
+}
+
+.news-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    opacity: 0.6;
+    filter: grayscale(40%);
+    transition: 0.5s;
+}
+
+.news-card:hover img {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.1);
+}
+
+.news-content {
+    padding: 20px;
+    border-top: 1px solid var(--panel-border);
+}
+
+.news-content h3 {
+    margin-bottom: 8px;
+    font-family: 'Orbitron';
+    font-size: 1rem;
+}
+
+.news-content span {
+    font-size: 0.7rem;
+    color: var(--glow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Suggestion Section */
+.suggestion-box input,
+.suggestion-box textarea {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #333;
+    color: white;
+    font-family: 'Rajdhani';
+}
+
+.suggestion-box input:focus,
+.suggestion-box textarea:focus {
+    outline: none;
+    border-color: var(--glow);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+
+.btn-tech {
+    background: transparent;
+    border: 1px solid var(--glow);
+    color: var(--glow);
+    padding: 15px;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-family: 'Orbitron';
+    font-weight: bold;
+    transition: 0.4s;
+    cursor: pointer;
+}
+
+.btn-tech:hover {
+    background: var(--glow);
+    color: black;
+    box-shadow: 0 0 30px var(--glow);
+}
+
+footer {
+    padding: 60px;
+    text-align: center;
+    border-top: 1px solid #111;
+    color: #444;
+    letter-spacing: 2px;
+    font-size: 0.8rem;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas-stars"></canvas>
+
+<nav>
+    <div class="logo">ASTROCORE</div>
+    <div class="nav-links">
+        <a href="#philosophy">Core</a>
+        <a href="#missions">Missions</a>
+        <a href="#news">News</a>
+        <a href="#suggestion">Suggest</a>
+    </div>
+</nav>
+
+<section id="hero">
+    <div data-aos="zoom-out">
+        <h1 style="font-family:'Orbitron'; font-size:10vw; line-height: 0.9; text-shadow: 0 0 30px rgba(0,243,255,0.3);">ASTROCORE</h1>
+        <div style="width: 100px; height: 4px; background: var(--glow); margin: 20px 0;"></div>
+        <p style="max-width:500px; color:#aaa; font-size: 1.2rem; letter-spacing: 1px;">
+            MONITORING GLOBAL SPACE MISSIONS <br> BUILDING THE FUTURE OF ORBITAL SYSTEMS.
+        </p>
+    </div>
+</section>
+
+<section id="philosophy">
+    <div class="glass-panel" data-aos="fade-right">
+        <h2>Core Philosophy</h2>
+        <p style="font-size: 1.4rem; line-height: 1.6; color: #ccc;">We track developments from global space agencies and develop independent mission concepts for the next era of exploration.</p>
+    </div>
+</section>
+
+<section id="missions">
+    <h2>Mission Roadmap</h2>
+    <div class="news-grid">
+        <div class="news-card" data-aos="fade-up">
+            <img src="https://images.unsplash.com/photo-1581091012184-7f66f8e1c7c6">
+            <div class="news-content">
+                <h3>AC-01 | CubeSat Development</h3>
+                <span>Status: Concept Phase</span>
+                <p style="margin-top:10px; color:#aaa;">Design and launch of a low-cost CubeSat for Earth observation.</p>
+            </div>
+        </div>
+        <div class="news-card" data-aos="fade-up" data-aos-delay="150">
+            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa">
+            <div class="news-content">
+                <h3>AC-02 | Space Club Initiative</h3>
+                <span>Status: Planning</span>
+                <p style="margin-top:10px; color:#aaa;">Formation of a student-led aerospace club for propulsion research.</p>
+            </div>
+        </div>
+        <div class="news-card" data-aos="fade-up" data-aos-delay="300">
+            <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa">
+            <div class="news-content">
+                <h3>AC-03 | Small Launch Vehicle</h3>
+                <span>Status: Research</span>
+                <p style="margin-top:10px; color:#aaa;">Development of a small-scale reusable rocket system prototype.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="news">
+     <h2>Deep Space Feed</h2>
+    <div class="news-grid">
+        <div class="news-card" data-aos="fade-up">
+            <img src="https://i0.wp.com/spacenews.com/wp-content/uploads/2024/05/iss.jpg?resize=1536%2C938&ssl=1">
+            <div class="news-content">
+                <h3>ISS Mission Deployment</h3>
+                <span>Source: SpaceNews | 2026</span>
+            </div>
+        </div>
+        <div class="news-card" data-aos="fade-up" data-aos-delay="100">
+            <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa">
+            <div class="news-content">
+                <h3>Artemis Lunar Program</h3>
+                <span>Source: NASA | 2026</span>
+            </div>
+        </div>
+        <div class="news-card" data-aos="fade-up" data-aos-delay="200">
+            <img src="https://images.unsplash.com/photo-1454789548928-9efd52dc4031">
+            <div class="news-content">
+                <h3>ISRO Launch Window</h3>
+                <span>Source: ISRO | 2026</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="suggestion">
+    <h2>Suggestion Uplink</h2>
+    <div class="glass-panel suggestion-box" data-aos="fade-up">
+        <input type="text" placeholder="OPERATOR NAME">
+        <input type="email" placeholder="COMMS ENCRYPTED EMAIL">
+        <textarea rows="5" placeholder="TRANSMIT YOUR SUGGESTION TO THE CORE..."></textarea>
+        <button class="btn-tech">Initiate Uplink</button>
+    </div>
+</section>
+
+<footer>
+    <p>© 2026 ASTROCORE TERMINAL | SECURE CONNECTION ESTABLISHED</p>
+</footer>
+
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+AOS.init({ duration: 1000, once: true });
+
+const canvas = document.getElementById('canvas-stars');
+const ctx = canvas.getContext('2d');
+let w, h, stars = [];
+
+function initCanvas() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    stars = [];
+    for(let i=0; i<400; i++) {
+        stars.push({
+            x: Math.random() * w - w/2,
+            y: Math.random() * h - h/2,
+            z: Math.random() * w,
+            o: Math.random()
+        });
+    }
+}
+
+function drawStars() {
+    ctx.fillStyle = "rgba(5, 7, 10, 0.2)";
+    ctx.fillRect(0, 0, w, h);
+    
+    stars.forEach(s => {
+        s.z -= 2; // Speed of travel
+        if(s.z <= 0) s.z = w;
+        
+        let sx = (s.x / s.z) * w + w/2;
+        let sy = (s.y / s.z) * h + h/2;
+        let size = (1 - s.z/w) * 3;
+        
+        ctx.fillStyle = `rgba(0, 243, 255, ${1 - s.z/w})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, size, 0, Math.PI*2);
+        ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', initCanvas);
+initCanvas();
+drawStars();
+</script>
+
+</body>
+</html>
