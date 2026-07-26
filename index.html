@@ -1,447 +1,698 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ASTROCORE | Mission Control</title>
+<title>ASTROCORE — Dispatch</title>
+<meta name="description" content="ASTROCORE — a student-run record of what's happening in orbit, and what we're building next.">
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 :root {
-    --glow: #00f3ff;
-    --accent: #ff0055;
-    --dark-bg: #05070a;
-    --panel-border: rgba(0, 243, 255, 0.3);
+    --paper: #ffffff;
+    --paper-alt: #f1f2f5;
+    --ink: #14171b;
+    --ink-soft: #5b6069;
+    --ink-faint: #9a9ea5;
+    --accent: #2b49ff;
+    --accent-tint: #eef0ff;
+    --line: #e3e4e6;
+    --panel-bg: transparent;
+    --panel-blur: none;
+    --panel-border: transparent;
+    --panel-radius: 0px;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    color-scheme: light;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+html[data-theme="dark"] {
+    --paper: #0b0d12;
+    --paper-alt: #12151b;
+    --ink: #eef0f4;
+    --ink-soft: #9aa0ab;
+    --ink-faint: #5b616c;
+    --accent: #8ba4ff;
+    --accent-tint: rgba(139,164,255,0.14);
+    --line: rgba(255,255,255,0.1);
+    color-scheme: dark;
+}
+
+html[data-theme="glass"] {
+    --paper: transparent;
+    --paper-alt: rgba(255,255,255,0.4);
+    --ink: #1b1f2a;
+    --ink-soft: #4b5160;
+    --ink-faint: #7d818c;
+    --accent: #5b52ff;
+    --accent-tint: rgba(91,82,255,0.14);
+    --line: rgba(255,255,255,0.5);
+    --panel-bg: rgba(255,255,255,0.38);
+    --panel-blur: blur(16px);
+    --panel-border: 1px solid rgba(255,255,255,0.55);
+    --panel-radius: 16px;
+    color-scheme: light;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
-    background: var(--dark-bg);
-    color: white;
-    font-family: 'Rajdhani', sans-serif;
-    overflow-x: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 400;
+    line-height: 1.5;
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
-/* ENHANCED HUD EFFECTS */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: 
-        radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%),
-        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%);
-    background-size: 100% 100%, 100% 4px;
-    pointer-events: none;
-    z-index: 999;
+html[data-theme="glass"] body {
+    background: linear-gradient(135deg, #dfe6ff 0%, #ffe6f0 45%, #e2fbef 100%);
+    background-attachment: fixed;
 }
 
-/* Interactive Warp Background */
-#canvas-stars {
+#stars {
     position: fixed;
-    top: 0; left: 0;
+    inset: 0;
     z-index: -1;
-    background: radial-gradient(circle at center, #0a0c14 0%, #020408 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
 }
-
-/* Navigation */
-nav {
-    position: fixed;
-    width: 100%;
-    padding: 20px 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--panel-border);
-    z-index: 1000;
-}
-
-/* COOLER LOGO */
-.logo {
-    font-family: 'Orbitron';
-    font-weight: 900;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    background: linear-gradient(90deg, #fff, var(--glow), #fff);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shine 3s linear infinite;
-    filter: drop-shadow(0 0 5px var(--glow));
-}
-
-@keyframes shine {
-    to { background-position: 200% center; }
-}
-
-.nav-links a {
-    color: #fff;
-    text-decoration: none;
-    margin-left: 20px;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    transition: 0.3s;
-    opacity: 0.7;
-}
-
-.nav-links a:hover {
-    color: var(--glow);
-    opacity: 1;
-    text-shadow: 0 0 10px var(--glow);
-}
-
-/* Sections */
-section {
-    min-height: 100vh;
-    padding: 120px 10%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-h2 {
-    font-family: 'Orbitron';
-    font-size: 2.5rem;
-    margin-bottom: 30px;
-    letter-spacing: 4px;
-    color: var(--glow);
-    text-transform: uppercase;
-    border-left: 4px solid var(--glow);
-    padding-left: 15px;
-}
-
-/* Glass Panel */
-.glass-panel {
-    background: rgba(255,255,255,0.02);
-    backdrop-filter: blur(15px);
-    border: 1px solid var(--panel-border);
-    padding: 40px;
-    border-radius: 2px;
-    position: relative;
-}
-
-.glass-panel::after {
+html[data-theme="dark"] #stars { opacity: 1; }
+html[data-theme="dark"] body::before {
     content: "";
-    position: absolute;
-    top: -1px; left: -1px;
-    width: 20px; height: 20px;
-    border-top: 2px solid var(--glow);
-    border-left: 2px solid var(--glow);
+    position: fixed; inset: 0; z-index: -1;
+    background: radial-gradient(ellipse at 15% -10%, rgba(90,70,180,0.35) 0%, transparent 55%),
+                radial-gradient(ellipse at 90% 110%, rgba(30,60,160,0.3) 0%, transparent 50%);
 }
 
-/* Mission Cards */
-.mission-card {
-    border: 1px solid #222;
-    padding: 30px;
-    margin-bottom: 20px;
-    background: rgba(0,0,0,0.6);
-    transition: 0.4s;
-}
+::selection { background: var(--accent); color: #fff; }
+a { color: inherit; }
 
-.mission-card:hover {
-    border-color: var(--glow);
-    box-shadow: 0 0 15px rgba(0,243,255,0.2);
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-/* News Grid */
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
-    gap: 25px;
-}
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 6%; }
 
-.news-card {
-    border: 1px solid #1a1a1a;
-    background: rgba(0,0,0,0.7);
-    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+/* ============ MASTHEAD ============ */
+header.masthead {
+    position: sticky; top: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    z-index: 100;
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+html[data-theme="dark"] header.masthead { background: rgba(11,13,18,0.82); }
+html[data-theme="glass"] header.masthead { background: rgba(255,255,255,0.35); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.5); }
+
+.masthead-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 6%;
+}
+.logo-mark { display: flex; align-items: center; gap: 12px; }
+.logo-mark svg { width: 26px; height: 26px; }
+.logo-mark svg ellipse { stroke: var(--ink); }
+.logo-mark svg circle { fill: var(--accent); }
+.logo-mark span {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: 0.2px;
+}
+.masthead-right { display: flex; align-items: center; gap: 34px; }
+nav.links { display: flex; gap: 34px; }
+nav.links a {
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
     position: relative;
+    padding-bottom: 3px;
 }
-
-.news-card:hover {
-    border-color: var(--glow);
-    transform: translateY(-10px);
+nav.links a::after {
+    content: ""; position: absolute; left: 0; bottom: 0;
+    width: 0; height: 1px; background: var(--accent);
+    transition: width 0.25s ease;
 }
+nav.links a:hover { color: var(--ink); }
+nav.links a:hover::after { width: 100%; }
 
-.news-card img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    opacity: 0.6;
-    filter: grayscale(40%);
-    transition: 0.5s;
+/* Theme shifter */
+.theme-shifter {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 3px;
+    gap: 2px;
 }
-
-.news-card:hover img {
-    opacity: 1;
-    filter: grayscale(0%);
-    transform: scale(1.1);
-}
-
-.news-content {
-    padding: 20px;
-    border-top: 1px solid var(--panel-border);
-}
-
-.news-content h3 {
-    margin-bottom: 8px;
-    font-family: 'Orbitron';
-    font-size: 1rem;
-}
-
-.news-content span {
-    font-size: 0.7rem;
-    color: var(--glow);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Suggestion Section */
-.suggestion-box input,
-.suggestion-box textarea {
-    width: 100%;
-    padding: 15px;
-    margin-bottom: 15px;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid #333;
-    color: white;
-    font-family: 'Rajdhani';
-}
-
-.suggestion-box input:focus,
-.suggestion-box textarea:focus {
-    outline: none;
-    border-color: var(--glow);
-    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
-}
-
-.btn-tech {
+.theme-shifter button {
+    width: 28px; height: 28px;
+    border: none;
     background: transparent;
-    border: 1px solid var(--glow);
-    color: var(--glow);
-    padding: 15px;
-    width: 100%;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    font-family: 'Orbitron';
-    font-weight: bold;
-    transition: 0.4s;
+    color: var(--ink-faint);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+.theme-shifter button svg { width: 15px; height: 15px; }
+.theme-shifter button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+}
+html[data-theme="glass"] .theme-shifter button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+@media (max-width: 720px) { nav.links { display: none; } }
+
+/* ============ SECTIONS ============ */
+section { padding: 100px 0; border-bottom: 1px solid var(--line); transition: border-color 0.4s ease; }
+section:last-of-type { border-bottom: none; }
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
 }
 
-.btn-tech:hover {
-    background: var(--glow);
-    color: black;
-    box-shadow: 0 0 30px var(--glow);
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* ============ HERO ============ */
+#hero { padding-top: 70px; padding-bottom: 90px; }
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 60px;
+    align-items: end;
+}
+h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.6rem, 5.4vw, 4.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+}
+h1 em { font-style: italic; font-weight: 500; color: var(--accent); }
+
+.hero-meta {
+    border-left: 1px solid var(--line);
+    padding-left: 28px;
+}
+.hero-meta p { color: var(--ink-soft); font-size: 1.02rem; margin-bottom: 22px; }
+.stat-row { display: flex; gap: 30px; font-family: var(--font-mono); }
+.stat-row div div:first-child { font-size: 0.65rem; color: var(--ink-faint); letter-spacing: 1px; text-transform: uppercase; }
+.stat-row div div:last-child { font-size: 1.3rem; margin-top: 4px; font-family: var(--font-display); font-weight: 600; }
+
+.hero-actions { margin-top: 40px; display: flex; gap: 26px; align-items: center; }
+.btn-solid {
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    padding: 14px 26px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: inline-block;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+html[data-theme="glass"] .btn-solid, html[data-theme="dark"] .btn-solid { color: #fff; }
+.btn-solid:hover { background: var(--accent); color: #fff; }
+.link-underline {
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 3px;
+    transition: border-color 0.25s ease, color 0.25s ease;
+}
+.link-underline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ============ DIRECTIVE (pull quote) ============ */
+.directive {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+    line-height: 1.5;
+    max-width: 880px;
+    color: var(--ink);
+}
+.directive .accent-word { color: var(--accent); font-style: normal; font-weight: 600; }
+
+.pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap: 40px;
+    margin-top: 56px;
+    max-width: 920px;
+}
+.pillar { border-top: 1px solid var(--line); padding-top: 18px; }
+.pillar .num { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-faint); }
+.pillar h4 { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 8px 0 8px; }
+.pillar p { color: var(--ink-soft); font-size: 0.92rem; }
+
+/* ============ MISSIONS (ledger) ============ */
+h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 3vw, 2.5rem);
+    margin-bottom: 8px;
+}
+.section-sub { color: var(--ink-soft); margin-bottom: 50px; max-width: 560px; }
+
+.ledger-wrap {
+    background: var(--panel-bg);
+    backdrop-filter: var(--panel-blur);
+    border: var(--panel-border);
+    border-radius: var(--panel-radius);
+    padding: var(--panel-radius);
+}
+.ledger { width: 100%; border-collapse: collapse; }
+.ledger thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--ink);
+    font-weight: 500;
+}
+.ledger tbody td {
+    padding: 26px 12px 26px 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+.ledger tbody tr:hover { background: var(--paper-alt); }
+.led-id { font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-faint); white-space: nowrap; }
+.led-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+.led-desc { color: var(--ink-soft); font-size: 0.9rem; max-width: 420px; margin-top: 4px; }
+.led-status { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.led-status.tag-active { color: var(--accent); }
+.led-status.tag-plan { color: var(--ink-soft); }
+.led-status.tag-research { color: var(--ink-faint); }
+
+@media (max-width: 720px) {
+    .ledger thead { display: none; }
+    .ledger, .ledger tbody, .ledger tr, .ledger td { display: block; width: 100%; }
+    .ledger tbody td { padding: 4px 0; border-bottom: none; }
+    .ledger tbody tr { padding: 24px 0; border-bottom: 1px solid var(--line); }
 }
 
+/* ============ FEED (dispatch list) ============ */
+.dispatch-list { display: flex; flex-direction: column; }
+.dispatch-item {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 30px;
+    padding: 34px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-bg);
+    backdrop-filter: var(--panel-blur);
+    border-left: var(--panel-border);
+    border-right: var(--panel-border);
+}
+.dispatch-item:first-child { border-top: 1px solid var(--ink); }
+html[data-theme="glass"] .dispatch-item { border-radius: 14px; margin-bottom: 14px; border: var(--panel-border); }
+html[data-theme="glass"] .dispatch-item:first-child { border-top: var(--panel-border); }
+.dispatch-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); padding-top: 4px; }
+.dispatch-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-tint);
+    padding: 4px 9px;
+    margin-bottom: 10px;
+}
+.dispatch-item h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+}
+.dispatch-item p { color: var(--ink-soft); font-size: 0.94rem; max-width: 560px; }
+
+@media (max-width: 640px) { .dispatch-item { grid-template-columns: 1fr; gap: 10px; } }
+
+/* ============ UPLINK (contact) ============ */
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; }
+.contact-copy p { color: var(--ink-soft); max-width: 380px; margin-top: 16px; }
+
+#uplink-form {
+    background: var(--panel-bg);
+    backdrop-filter: var(--panel-blur);
+    border: var(--panel-border);
+    border-radius: var(--panel-radius);
+    padding: var(--panel-radius);
+}
+
+.field-line { margin-bottom: 30px; }
+.field-line label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+}
+.field-line input, .field-line textarea {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 8px 0;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    color: var(--ink);
+    resize: vertical;
+    transition: border-color 0.25s ease;
+}
+.field-line input:focus, .field-line textarea:focus { outline: none; border-color: var(--ink); }
+.field-line input::placeholder, .field-line textarea::placeholder { color: var(--ink-faint); }
+
+.btn-send {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 15px 30px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+html[data-theme="dark"] .btn-send, html[data-theme="glass"] .btn-send { color: #fff; }
+.btn-send:hover:not(:disabled) { background: var(--accent); color: #fff; }
+.btn-send:disabled { opacity: 0.55; cursor: default; }
+#uplink-status { margin-top: 16px; font-family: var(--font-mono); font-size: 0.8rem; min-height: 1.2em; }
+
+@media (max-width: 780px) { .contact-grid, .hero-grid { grid-template-columns: 1fr; } .hero-meta { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 24px; } }
+
+/* ============ FOOTER ============ */
 footer {
-    padding: 60px;
-    text-align: center;
-    border-top: 1px solid #111;
-    color: #444;
-    letter-spacing: 2px;
-    font-size: 0.8rem;
+    padding: 40px 6% 60px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    html { scroll-behavior: auto; }
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="canvas-stars"></canvas>
+<canvas id="stars"></canvas>
 
-<nav>
-    <div class="logo">ASTROCORE</div>
-    <div class="nav-links">
-        <a href="#philosophy">Core</a>
-        <a href="#missions">Missions</a>
-        <a href="#news">News</a>
-        <a href="#suggestion">Suggest</a>
-        <a href="#suggestion">Redierect</a>
+<header class="masthead">
+    <div class="masthead-inner">
+        <div class="logo-mark">
+            <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="13" cy="13" rx="11" ry="4.5" stroke-width="1.1"/>
+                <circle cx="13" cy="13" r="2.6"/>
+            </svg>
+            <span>ASTROCORE</span>
+        </div>
+        <div class="masthead-right">
+            <nav class="links">
+                <a href="#directive">Directive</a>
+                <a href="#missions">Missions</a>
+                <a href="#feed">Dispatch</a>
+                <a href="#uplink">Contact</a>
+            </nav>
+            <div class="theme-shifter" role="group" aria-label="Theme">
+                <button data-theme-btn="light" aria-label="Light theme" aria-pressed="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                </button>
+                <button data-theme-btn="dark" aria-label="Dark theme" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+                </button>
+                <button data-theme-btn="glass" aria-label="Soft glass theme" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16l-2 16H6L4 4Z"/><path d="M4 4l8 8 8-8"/></svg>
+                </button>
+            </div>
+        </div>
     </div>
-</nav>
+</header>
 
 <section id="hero">
-    <div data-aos="zoom-out">
-        <h1 style="font-family:'Orbitron'; font-size:10vw; line-height: 0.9; text-shadow: 0 0 30px rgba(0,243,255,0.3);">ASTROCORE</h1>
-        <div style="width: 100px; height: 4px; background: var(--glow); margin: 20px 0;"></div>
-        <p style="max-width:500px; color:#aaa; font-size: 1.2rem; letter-spacing: 1px;">
-            MONITORING GLOBAL SPACE MISSIONS <br> BUILDING THE FUTURE OF ORBITAL SYSTEMS.
-        </p>
+    <div class="wrap">
+        <div class="eyebrow reveal">Student Aerospace Initiative</div>
+        <div class="hero-grid">
+            <h1 class="reveal">A record of what's happening in <em>orbit</em> — and what we're building next.</h1>
+            <div class="hero-meta reveal">
+                <p>ASTROCORE follows missions from the world's space agencies and runs its own concept programme alongside them, from a first CubeSat to a small launch vehicle.</p>
+                <div class="stat-row">
+                    <div><div>Programmes</div><div>03</div></div>
+                    <div><div>Founded</div><div>2026</div></div>
+                    <div><div>Status</div><div>Active</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-actions reveal">
+            <a href="#missions" class="btn-solid">View the roadmap</a>
+            <a href="#uplink" class="link-underline">Send a suggestion</a>
+        </div>
     </div>
 </section>
 
-<section id="philosophy">
-    <div class="glass-panel" data-aos="fade-right">
-        <h2>Core Philosophy</h2>
-        <p style="font-size: 1.4rem; line-height: 1.6; color: #ccc;">We track developments from global space agencies and develop independent mission concepts for the next era of exploration.</p>
+<section id="directive">
+    <div class="wrap">
+        <div class="eyebrow reveal">Core Directive</div>
+        <p class="directive reveal">We track developments from global space agencies and use them as reference points to <span class="accent-word">develop our own mission concepts</span> — reviewed and logged the way a flight team would, in the open.</p>
+        <div class="pillars">
+            <div class="pillar reveal"><div class="num">01</div><h4>Observe</h4><p>Follow launches, orbital mechanics, and mission profiles from agencies worldwide.</p></div>
+            <div class="pillar reveal"><div class="num">02</div><h4>Design</h4><p>Turn what we learn into our own hardware and mission concepts, documented from the first sketch.</p></div>
+            <div class="pillar reveal"><div class="num">03</div><h4>Review</h4><p>Every concept goes through open critique before it moves to the next phase.</p></div>
+        </div>
     </div>
 </section>
 
 <section id="missions">
-    <h2>Mission Roadmap</h2>
-    <div class="news-grid">
-        <div class="news-card" data-aos="fade-up">
-            <img src="https://images.unsplash.com/photo-1581091012184-7f66f8e1c7c6">
-            <div class="news-content">
-                <h3>AC-01 | CubeSat Development</h3>
-                <span>Status: Concept Phase</span>
-                <p style="margin-top:10px; color:#aaa;">Design and launch of a low-cost CubeSat for Earth observation.</p>
-            </div>
+    <div class="wrap">
+        <h2 class="reveal">Mission roadmap</h2>
+        <p class="section-sub reveal">Three programmes in motion, at different stages.</p>
+        <div class="ledger-wrap reveal">
+        <table class="ledger">
+            <thead>
+                <tr><th>ID</th><th>Programme</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="led-id">AC—01</td>
+                    <td><div class="led-name">CubeSat Development</div><div class="led-desc">Design and launch of a low-cost 1U CubeSat for Earth observation.</div></td>
+                    <td class="led-status tag-active">Concept phase</td>
+                </tr>
+                <tr>
+                    <td class="led-id">AC—02</td>
+                    <td><div class="led-name">Space Club Initiative</div><div class="led-desc">Formation of a student-led aerospace club for propulsion research.</div></td>
+                    <td class="led-status tag-plan">Planning</td>
+                </tr>
+                <tr>
+                    <td class="led-id">AC—03</td>
+                    <td><div class="led-name">Small Launch Vehicle</div><div class="led-desc">Development of a small-scale reusable rocket system prototype.</div></td>
+                    <td class="led-status tag-research">Research</td>
+                </tr>
+            </tbody>
+        </table>
         </div>
-        <div class="news-card" data-aos="fade-up" data-aos-delay="150">
-            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa">
-            <div class="news-content">
-                <h3>AC-02 | Space Club Initiative</h3>
-                <span>Status: Planning</span>
-                <p style="margin-top:10px; color:#aaa;">Formation of a student-led aerospace club for propulsion research.</p>
+    </div>
+</section>
+
+<section id="feed">
+    <div class="wrap">
+        <h2 class="reveal">Dispatch</h2>
+        <p class="section-sub reveal">What's moving in space right now.</p>
+        <div class="dispatch-list">
+            <div class="dispatch-item reveal">
+                <div class="dispatch-date">2026</div>
+                <div>
+                    <span class="dispatch-tag">Orbital Ops</span>
+                    <h3>ISS Mission Deployment</h3>
+                    <p>Latest deployment activity aboard the International Space Station. Source: SpaceNews.</p>
+                </div>
             </div>
-        </div>
-        <div class="news-card" data-aos="fade-up" data-aos-delay="300">
-            <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa">
-            <div class="news-content">
-                <h3>AC-03 | Small Launch Vehicle</h3>
-                <span>Status: Research</span>
-                <p style="margin-top:10px; color:#aaa;">Development of a small-scale reusable rocket system prototype.</p>
+            <div class="dispatch-item reveal">
+                <div class="dispatch-date">2026</div>
+                <div>
+                    <span class="dispatch-tag">Lunar Return</span>
+                    <h3>Artemis Lunar Program</h3>
+                    <p>Progress updates on NASA's Artemis programme and the path back to the Moon. Source: NASA.</p>
+                </div>
+            </div>
+            <div class="dispatch-item reveal">
+                <div class="dispatch-date">2026</div>
+                <div>
+                    <span class="dispatch-tag">Launch Schedule</span>
+                    <h3>ISRO Launch Window</h3>
+                    <p>Upcoming launch windows and vehicle readiness from ISRO. Source: ISRO.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section id="news">
-     <h2>Deep Space Feed</h2>
-    <div class="news-grid">
-        <div class="news-card" data-aos="fade-up">
-            <img src="https://i0.wp.com/spacenews.com/wp-content/uploads/2024/05/iss.jpg?resize=1536%2C938&ssl=1">
-            <div class="news-content">
-                <h3>ISS Mission Deployment</h3>
-                <span>Source: SpaceNews | 2026</span>
+<section id="uplink">
+    <div class="wrap">
+        <div class="contact-grid">
+            <div class="contact-copy reveal">
+                <h2>Send a suggestion</h2>
+                <p>Have an idea, a correction, or want to get involved? Tell us — every message is read.</p>
             </div>
+            <form id="uplink-form" class="reveal" action="https://formspree.io/f/mrenrbza" method="POST">
+                <input type="hidden" name="_next" id="f-next" value="">
+                <div class="field-line">
+                    <label for="f-name">Name</label>
+                    <input id="f-name" type="text" name="name" placeholder="Your name" required>
+                </div>
+                <div class="field-line">
+                    <label for="f-email">Email</label>
+                    <input id="f-email" type="email" name="email" placeholder="you@example.com" required>
+                </div>
+                <div class="field-line">
+                    <label for="f-message">Message</label>
+                    <textarea id="f-message" rows="4" name="message" placeholder="What's on your mind?" required></textarea>
+                </div>
+                <button class="btn-send" type="submit" id="uplink-submit">Send message</button>
+                <p id="uplink-status"></p>
+            </form>
         </div>
-        <div class="news-card" data-aos="fade-up" data-aos-delay="100">
-            <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa">
-            <div class="news-content">
-                <h3>Artemis Lunar Program</h3>
-                <span>Source: NASA | 2026</span>
-            </div>
-        </div>
-        <div class="news-card" data-aos="fade-up" data-aos-delay="200">
-            <img src="https://images.unsplash.com/photo-1454789548928-9efd52dc4031">
-            <div class="news-content">
-                <h3>ISRO Launch Window</h3>
-                <span>Source: ISRO | 2026</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section id="suggestion">
-    <h2>Suggestion Uplink</h2>
-    <div class="glass-panel suggestion-box" data-aos="fade-up">
-        <form id="uplink-form" action="https://formspree.io/f/mrenrbza" method="POST">
-            <input type="text" name="name" placeholder="OPERATOR NAME" required>
-            <input type="email" name="email" placeholder="COMMS ENCRYPTED EMAIL" required>
-            <textarea rows="5" name="message" placeholder="TRANSMIT YOUR SUGGESTION TO THE CORE..." required></textarea>
-            <button class="btn-tech" type="submit" id="uplink-submit">Initiate Uplink</button>
-            <p id="uplink-status" style="margin-top:15px; letter-spacing:1px; font-size:0.85rem;"></p>
-        </form>
     </div>
 </section>
 
 <footer>
-    <p>© 2026 ASTROCORE TERMINAL | SECURE CONNECTION ESTABLISHED</p>
+    <span>© 2026 ASTROCORE</span>
+    <span>Logged in the open</span>
 </footer>
 
-<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 <script>
-AOS.init({ duration: 1000, once: true });
+// ---- Scroll reveal ----
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+}, { threshold: 0.15 });
+revealEls.forEach(el => io.observe(el));
 
-const canvas = document.getElementById('canvas-stars');
+// ---- Theme shifter (light / dark / soft glass) ----
+const html = document.documentElement;
+const themeButtons = document.querySelectorAll('[data-theme-btn]');
+const STORAGE_KEY = 'astrocore-theme';
+
+function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    themeButtons.forEach(btn => {
+        btn.setAttribute('aria-pressed', btn.dataset.themeBtn === theme ? 'true' : 'false');
+    });
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+    if (theme === 'dark') startStars(); else stopStars();
+}
+
+themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => applyTheme(btn.dataset.themeBtn));
+});
+
+let savedTheme = 'light';
+try { savedTheme = localStorage.getItem(STORAGE_KEY) || 'light'; } catch (e) {}
+applyTheme(savedTheme);
+
+// ---- Dark theme starfield ----
+const canvas = document.getElementById('stars');
 const ctx = canvas.getContext('2d');
 let w, h, stars = [];
+let rafId = null;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function initCanvas() {
+function initStars() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
     stars = [];
-    for(let i=0; i<400; i++) {
+    for (let i = 0; i < 220; i++) {
         stars.push({
-            x: Math.random() * w - w/2,
-            y: Math.random() * h - h/2,
-            z: Math.random() * w,
-            o: Math.random()
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: Math.random() * 1.3 + 0.3,
+            phase: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.02 + 0.006
         });
     }
 }
 
 function drawStars() {
-    ctx.fillStyle = "rgba(5, 7, 10, 0.2)";
-    ctx.fillRect(0, 0, w, h);
-    
+    ctx.clearRect(0, 0, w, h);
     stars.forEach(s => {
-        s.z -= 2; // Speed of travel
-        if(s.z <= 0) s.z = w;
-        
-        let sx = (s.x / s.z) * w + w/2;
-        let sy = (s.y / s.z) * h + h/2;
-        let size = (1 - s.z/w) * 3;
-        
-        ctx.fillStyle = `rgba(0, 243, 255, ${1 - s.z/w})`;
+        s.phase += s.speed;
+        const twinkle = (Math.sin(s.phase) + 1) / 2;
+        ctx.fillStyle = `rgba(210, 220, 255, ${0.25 + twinkle * 0.65})`;
         ctx.beginPath();
-        ctx.arc(sx, sy, size, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
     });
-    requestAnimationFrame(drawStars);
+    if (!reduceMotion) rafId = requestAnimationFrame(drawStars);
 }
 
-window.addEventListener('resize', initCanvas);
-initCanvas();
-drawStars();
+function startStars() {
+    initStars();
+    if (rafId) cancelAnimationFrame(rafId);
+    drawStars();
+}
 
-// Suggestion Uplink form -> Formspree
+function stopStars() {
+    if (rafId) cancelAnimationFrame(rafId);
+    ctx.clearRect(0, 0, w || window.innerWidth, h || window.innerHeight);
+}
+
+window.addEventListener('resize', () => { if (html.getAttribute('data-theme') === 'dark') startStars(); });
+
+// ---- Suggestion form -> Formspree ----
+// Plain POST + redirect-back (Formspree's own recommended integration).
+// Avoids fetch()/CORS problems that silently fail when the page is opened
+// from a local file:// path instead of a hosted URL.
 const uplinkForm = document.getElementById('uplink-form');
 const uplinkStatus = document.getElementById('uplink-status');
 const uplinkSubmit = document.getElementById('uplink-submit');
+const uplinkNext = document.getElementById('f-next');
 
-uplinkForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
+const baseUrl = window.location.href.split('#')[0].split('?')[0];
+uplinkNext.value = baseUrl + '?uplink=sent#uplink';
+
+uplinkForm.addEventListener('submit', function () {
     uplinkSubmit.disabled = true;
-    uplinkSubmit.textContent = 'Transmitting...';
-    uplinkStatus.style.color = 'var(--glow)';
-    uplinkStatus.textContent = '';
-
-    try {
-        const response = await fetch(uplinkForm.action, {
-            method: 'POST',
-            body: new FormData(uplinkForm),
-            headers: { 'Accept': 'application/json' }
-        });
-
-        if (response.ok) {
-            uplinkStatus.style.color = 'var(--glow)';
-            uplinkStatus.textContent = 'UPLINK CONFIRMED // SUGGESTION RECEIVED';
-            uplinkForm.reset();
-        } else {
-            const data = await response.json().catch(() => null);
-            uplinkStatus.style.color = 'var(--accent)';
-            uplinkStatus.textContent = (data && data.errors)
-                ? 'UPLINK FAILED // ' + data.errors.map(err => err.message).join(', ').toUpperCase()
-                : 'UPLINK FAILED // PLEASE TRY AGAIN';
-        }
-    } catch (err) {
-        uplinkStatus.style.color = 'var(--accent)';
-        uplinkStatus.textContent = 'UPLINK FAILED // CONNECTION ERROR';
-    } finally {
-        uplinkSubmit.disabled = false;
-        uplinkSubmit.textContent = 'Initiate Uplink';
-    }
+    uplinkSubmit.textContent = 'Sending…';
+    uplinkStatus.style.color = 'var(--ink-soft)';
+    uplinkStatus.textContent = 'Sending — you will land back here once it is received.';
 });
+
+if (new URLSearchParams(window.location.search).get('uplink') === 'sent') {
+    document.addEventListener('DOMContentLoaded', () => {
+        uplinkStatus.style.color = 'var(--accent)';
+        uplinkStatus.textContent = 'Message received — thank you.';
+        uplinkForm.reset();
+    });
+}
 </script>
 
 </body>
