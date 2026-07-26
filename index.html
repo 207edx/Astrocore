@@ -344,10 +344,13 @@ footer {
 <section id="suggestion">
     <h2>Suggestion Uplink</h2>
     <div class="glass-panel suggestion-box" data-aos="fade-up">
-        <input type="text" placeholder="OPERATOR NAME">
-        <input type="email" placeholder="COMMS ENCRYPTED EMAIL">
-        <textarea rows="5" placeholder="TRANSMIT YOUR SUGGESTION TO THE CORE..."></textarea>
-        <button class="btn-tech">Initiate Uplink</button>
+        <form id="uplink-form" action="https://formspree.io/f/mrenrbza" method="POST">
+            <input type="text" name="name" placeholder="OPERATOR NAME" required>
+            <input type="email" name="email" placeholder="COMMS ENCRYPTED EMAIL" required>
+            <textarea rows="5" name="message" placeholder="TRANSMIT YOUR SUGGESTION TO THE CORE..." required></textarea>
+            <button class="btn-tech" type="submit" id="uplink-submit">Initiate Uplink</button>
+            <p id="uplink-status" style="margin-top:15px; letter-spacing:1px; font-size:0.85rem;"></p>
+        </form>
     </div>
 </section>
 
@@ -400,6 +403,45 @@ function drawStars() {
 window.addEventListener('resize', initCanvas);
 initCanvas();
 drawStars();
+
+// Suggestion Uplink form -> Formspree
+const uplinkForm = document.getElementById('uplink-form');
+const uplinkStatus = document.getElementById('uplink-status');
+const uplinkSubmit = document.getElementById('uplink-submit');
+
+uplinkForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    uplinkSubmit.disabled = true;
+    uplinkSubmit.textContent = 'Transmitting...';
+    uplinkStatus.style.color = 'var(--glow)';
+    uplinkStatus.textContent = '';
+
+    try {
+        const response = await fetch(uplinkForm.action, {
+            method: 'POST',
+            body: new FormData(uplinkForm),
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+            uplinkStatus.style.color = 'var(--glow)';
+            uplinkStatus.textContent = 'UPLINK CONFIRMED // SUGGESTION RECEIVED';
+            uplinkForm.reset();
+        } else {
+            const data = await response.json().catch(() => null);
+            uplinkStatus.style.color = 'var(--accent)';
+            uplinkStatus.textContent = (data && data.errors)
+                ? 'UPLINK FAILED // ' + data.errors.map(err => err.message).join(', ').toUpperCase()
+                : 'UPLINK FAILED // PLEASE TRY AGAIN';
+        }
+    } catch (err) {
+        uplinkStatus.style.color = 'var(--accent)';
+        uplinkStatus.textContent = 'UPLINK FAILED // CONNECTION ERROR';
+    } finally {
+        uplinkSubmit.disabled = false;
+        uplinkSubmit.textContent = 'Initiate Uplink';
+    }
+});
 </script>
 
 </body>
