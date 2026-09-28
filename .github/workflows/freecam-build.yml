@@ -1,6 +1,10 @@
 name: Build Freecam 1.16.1
 
 on:
+  pull_request:
+    paths:
+      - 'freecam-1.16.1/**'
+      - '.github/workflows/freecam-build.yml'
   push:
     paths:
       - 'freecam-1.16.1/**'
