@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[32,)"
+license="MIT"
+[[mods]]
+modId="freecam"
+version="${file.jarVersion}"
+displayName="Freecam"
+authors="Astro"
+description='''Client-side free camera for Minecraft Forge 1.16.1. No server component required.'''
+
+[[dependencies.freecam]]
+    modId="forge"
+    mandatory=true
+    versionRange="[32,)"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.freecam]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.1]"
+    ordering="NONE"
+    side="CLIENT"
