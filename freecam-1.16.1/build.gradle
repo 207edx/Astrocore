@@ -26,9 +26,11 @@ minecraft {
         }
     }
 }
+
 dependencies {
     minecraft "net.minecraftforge:forge:${project.forge_version}"
 }
+
 jar {
     manifest {
         attributes([
@@ -45,10 +47,12 @@ jar.finalizedBy('reobfJar')
 
 task sourceZip(type: Zip) {
     archiveBaseName = 'freecam-' + project.version + '-source'
+    archiveVersion = ''
     destinationDirectory = file("$buildDir/distributions")
     from(project.projectDir) {
         exclude 'build/**'
         exclude 'run/**'
         exclude '.gradle/**'
+        exclude '.idea/**'
     }
 }
