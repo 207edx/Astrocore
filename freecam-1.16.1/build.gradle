@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'java'
+
+version = project.mod_version
+archivesBaseName = 'freecam'
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava.options.encoding = 'UTF-8'
+
+minecraft {
+    mappings channel: 'snapshot', version: project.mcp_mappings
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods { freecam { source sourceSets.main } }
+        }
+    }
+}
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.forge_version}"
+}
+jar {
+    manifest {
+        attributes([
+            'Specification-Title': 'Freecam',
+            'Specification-Vendor': 'Astro Freecam',
+            'Specification-Version': '1',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Astro Freecam'
+        ])
+    }
+}
+jar.finalizedBy('reobfJar')
+
+task sourceZip(type: Zip) {
+    archiveBaseName = 'freecam-' + project.version + '-source'
+    destinationDirectory = file("$buildDir/distributions")
+    from(project.projectDir) {
+        exclude 'build/**'
+        exclude 'run/**'
+        exclude '.gradle/**'
+    }
+}
