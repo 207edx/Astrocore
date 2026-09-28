@@ -26,7 +26,6 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderTickEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -82,22 +81,24 @@ public final class FreecamClient {
         dimension = d;
 
         if (lockedHotbar >= 0) p.inventory.currentItem = MathHelper.clamp(lockedHotbar, 0, 8);
-        if (!playerControl) restoreRotation(p);
+        if (!playerControl) {
+            captureMouseRotation(p);
+            restoreRotation(p);
+        }
         moveCamera(w);
     }
 
-    @SubscribeEvent
-    public static void renderTick(RenderTickEvent e) {
-        if (!enabled || camera == null || MC.player == null || playerControl) return;
-        ClientPlayerEntity p = MC.player;
+    private static void captureMouseRotation(ClientPlayerEntity p) {
+        if (playerControl || camera == null) return;
+
         float yawDelta = MathHelper.wrapDegrees(p.rotationYaw - lockedYaw);
         float pitchDelta = p.rotationPitch - lockedPitch;
+
         if (Math.abs(yawDelta) > 0.001F || Math.abs(pitchDelta) > 0.001F) {
             camera.rotationYaw = MathHelper.wrapDegrees(camera.rotationYaw + yawDelta);
             camera.rotationPitch = MathHelper.clamp(camera.rotationPitch + pitchDelta, -90F, 90F);
             camera.prevRotationYaw = camera.rotationYaw;
             camera.prevRotationPitch = camera.rotationPitch;
-            restoreRotation(p);
         }
     }
 
@@ -389,7 +390,6 @@ public final class FreecamClient {
         Vector3d from = camera.getPositionVec(), to = from.add(velocity);
         if (!FreecamConfig.IGNORE_ALL_COLLISION.get()) to = collide(w, from, to);
         camera.setPosition(to.x, to.y, to.z);
-        camera.motionX = camera.motionY = camera.motionZ = 0;
     }
 
     private static Vector3d collide(ClientWorld w, Vector3d from, Vector3d to) {
