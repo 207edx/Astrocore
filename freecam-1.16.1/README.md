@@ -30,3 +30,6 @@ The mod has no server component, packets, Mixins, or third-party configuration G
 
 Build with Java 8 using:
 .gradlew.bat clean build
+
+
+CI verification marker: Forge 1.16.1 client build.
