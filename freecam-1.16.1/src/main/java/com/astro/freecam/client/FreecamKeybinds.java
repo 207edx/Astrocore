@@ -19,13 +19,11 @@ public final class FreecamKeybinds {
 
     @net.minecraftforge.eventbus.api.SubscribeEvent
     public static void setup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            TOGGLE = new KeyBinding("key.freecam.toggle", InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_F4, "key.categories.freecam");
-            PLAYER_CONTROL = new KeyBinding("key.freecam.player_control", InputMappings.Type.KEYSYM, -1, "key.categories.freecam");
-            RESET_TRIPOD = new KeyBinding("key.freecam.reset_tripod", InputMappings.Type.KEYSYM, -1, "key.categories.freecam");
-            ClientRegistry.registerKeyBinding(TOGGLE);
-            ClientRegistry.registerKeyBinding(PLAYER_CONTROL);
-            ClientRegistry.registerKeyBinding(RESET_TRIPOD);
-        });
+        TOGGLE = new KeyBinding("key.freecam.toggle", InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_F4, "key.categories.freecam");
+        PLAYER_CONTROL = new KeyBinding("key.freecam.player_control", InputMappings.Type.KEYSYM, -1, "key.categories.freecam");
+        RESET_TRIPOD = new KeyBinding("key.freecam.reset_tripod", InputMappings.Type.KEYSYM, -1, "key.categories.freecam");
+        ClientRegistry.registerKeyBinding(TOGGLE);
+        ClientRegistry.registerKeyBinding(PLAYER_CONTROL);
+        ClientRegistry.registerKeyBinding(RESET_TRIPOD);
     }
 }
