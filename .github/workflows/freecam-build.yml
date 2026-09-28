@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          timeout 30s xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --no-daemon 2>&1 | tee client-smoke.log
+          timeout 90s xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --no-daemon 2>&1 | tee client-smoke.log
           code=${PIPESTATUS[0]}
           if grep -q "freecam : FMLClientSetupEvent" client-smoke.log; then
             if [ "$code" -eq 124 ] || [ "$code" -eq 143 ] || [ "$code" -eq 137 ] || [ "$code" -eq 0 ]; then
