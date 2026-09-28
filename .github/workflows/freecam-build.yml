@@ -75,12 +75,12 @@ jobs:
       - name: Windows clean build
         working-directory: freecam-1.16.1
         shell: powershell
-        run: .gradlew.bat clean build --no-daemon
+        run: .\\gradlew.bat clean build --no-daemon
       - name: Windows runClient smoke test
         working-directory: freecam-1.16.1
         shell: powershell
         run: |
-          $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c .gradlew.bat runClient --no-daemon > client-smoke.log 2>&1" -PassThru -NoNewWindow
+          $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c .\\gradlew.bat runClient --no-daemon > client-smoke.log 2>&1" -PassThru -NoNewWindow
           $finished = $proc.WaitForExit(90000)
           if (-not $finished) {
             taskkill /F /T /PID $proc.Id | Out-Null
