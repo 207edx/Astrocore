@@ -7,6 +7,12 @@ on:
     paths:
       - 'freecam-1.16.1/**'
       - '.github/workflows/astro-freecam-v2.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'freecam-1.16.1/**'
+      - '.github/workflows/astro-freecam-v2.yml'
   workflow_dispatch:
 
 jobs:
