@@ -1,7 +1,7 @@
 package com.astro.freecam.client;
 
 import com.astro.freecam.FreecamMod;
-import com.astro.freecam.client.gui.ReplayManagerScreen;
+import com.astro.freecam.client.gui.ReplayStudioScreen;
 import com.astro.freecam.config.FreecamConfig;
 import com.astro.freecam.replay.ReplayManager;
 import net.minecraft.block.Block;
@@ -11,7 +11,6 @@ import net.minecraft.block.FenceGateBlock;
 import net.minecraft.block.TrapDoorBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.entity.player.RemoteClientPlayerEntity;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -43,11 +42,8 @@ public final class FreecamClient {
     private static final TripodPose[] TRIPODS = new TripodPose[9];
 
     private static FreecamCamera camera;
-    private static boolean enabled;
-    private static boolean playerControl;
-    private static boolean tripodActive;
-    private static int activeTripod = -1;
-    private static int oldPerspective;
+    private static boolean enabled, playerControl, tripodActive;
+    private static int activeTripod = -1, oldPerspective;
     private static float lockedYaw, lockedPitch, lockedHeadYaw, lockedBodyYaw;
     private static Vector3d velocity = Vector3d.ZERO;
     private static Object dimension;
@@ -57,27 +53,18 @@ public final class FreecamClient {
     private static boolean replayLeftHeld, replayRightHeld, replayUpHeld, replayDownHeld;
 
     private FreecamClient() {}
-
     public static boolean enabled() { return enabled; }
     public static FreecamCamera camera() { return camera; }
-
-    public static void stopForReplay() {
-        if (enabled) disable(true);
-    }
+    public static void stopForReplay() { if (enabled) disable(true); }
 
     @SubscribeEvent
     public static void clientTick(TickEvent.ClientTickEvent e) {
         if (e.phase != TickEvent.Phase.END) return;
-
         handleKeys();
         ReplayManager.tickPlayback();
 
         if (ReplayManager.isPlaying()) return;
-
-        if (!enabled) {
-            ReplayManager.captureTick();
-            return;
-        }
+        if (!enabled) { ReplayManager.captureTick(); return; }
 
         ClientPlayerEntity p = MC.player;
         ClientWorld w = MC.world;
@@ -94,7 +81,6 @@ public final class FreecamClient {
         dimension = d;
 
         if (lockedHotbar >= 0) p.inventory.currentItem = MathHelper.clamp(lockedHotbar, 0, 8);
-
         if (!playerControl) {
             captureMouseRotation(p);
             restoreRotation(p);
@@ -105,11 +91,10 @@ public final class FreecamClient {
     }
 
     private static void captureMouseRotation(ClientPlayerEntity p) {
-        if (playerControl || camera == null) return;
+        if (camera == null || playerControl) return;
         float yawDelta = MathHelper.wrapDegrees(p.rotationYaw - lockedYaw);
         float pitchDelta = p.rotationPitch - lockedPitch;
-
-        if (Math.abs(yawDelta) > 0.001F || Math.abs(pitchDelta) > 0.001F) {
+        if (Math.abs(yawDelta) > .001F || Math.abs(pitchDelta) > .001F) {
             camera.rotationYaw = MathHelper.wrapDegrees(camera.rotationYaw + yawDelta);
             camera.rotationPitch = MathHelper.clamp(camera.rotationPitch + pitchDelta, -90F, 90F);
             camera.prevRotationYaw = camera.rotationYaw;
@@ -119,15 +104,7 @@ public final class FreecamClient {
 
     @SubscribeEvent
     public static void inputUpdate(InputUpdateEvent e) {
-        if (ReplayManager.isPlaying() && e.getMovementInput() != null) {
-            e.getMovementInput().moveForward = 0F;
-            e.getMovementInput().moveStrafe = 0F;
-            e.getMovementInput().jump = false;
-            e.getMovementInput().sneaking = false;
-            return;
-        }
-
-        if (enabled && !playerControl && e.getMovementInput() != null) {
+        if ((ReplayManager.isPlaying() || (enabled && !playerControl)) && e.getMovementInput() != null) {
             e.getMovementInput().moveForward = 0F;
             e.getMovementInput().moveStrafe = 0F;
             e.getMovementInput().jump = false;
@@ -142,12 +119,10 @@ public final class FreecamClient {
             return;
         }
         if (!enabled) return;
-
         if (!FreecamConfig.ALLOW_INTERACTION.get()) {
             e.setCanceled(true);
             return;
         }
-
         if (FreecamConfig.INTERACTION_MODE.get() == FreecamConfig.InteractionMode.PLAYER
                 && MC.player != null && MC.gameRenderer != null) {
             Entity old = MC.getRenderViewEntity();
@@ -179,16 +154,11 @@ public final class FreecamClient {
 
     @SubscribeEvent
     public static void cameraSetup(EntityViewRenderEvent.CameraSetup e) {
-        if (ReplayManager.isPlaying()) {
-            Entity view = MC.getRenderViewEntity();
-            if (view != null) {
-                e.setYaw(view.rotationYaw);
-                e.setPitch(view.rotationPitch);
-            }
-            return;
-        }
-
-        if (enabled && camera != null) {
+        Entity view = MC.getRenderViewEntity();
+        if (view != null) {
+            e.setYaw(view.rotationYaw);
+            e.setPitch(view.rotationPitch);
+        } else if (enabled && camera != null) {
             e.setYaw(camera.rotationYaw);
             e.setPitch(camera.rotationPitch);
         }
@@ -219,27 +189,23 @@ public final class FreecamClient {
             toggleCombo = false;
             resetCombo = false;
             lockedHotbar = -1;
-            replayLeftHeld = replayRightHeld = replayUpHeld = replayDownHeld = false;
             return;
         }
 
-        if (FreecamKeybinds.REPLAY_RECORD != null && FreecamKeybinds.REPLAY_RECORD.isPressed()) {
+        if (FreecamKeybinds.REPLAY_RECORD.isPressed()) {
             if (ReplayManager.isRecording()) ReplayManager.stopRecording();
             else ReplayManager.startRecording("");
         }
-
-        if (FreecamKeybinds.REPLAY_MANAGER != null && FreecamKeybinds.REPLAY_MANAGER.isPressed()) {
+        if (FreecamKeybinds.REPLAY_MANAGER.isPressed()) {
             if (ReplayManager.isPlaying()) ReplayManager.stopPlayback();
-            else if (MC.currentScreen == null) MC.displayGuiScreen(new ReplayManagerScreen());
+            else if (MC.currentScreen == null) MC.displayGuiScreen(new ReplayStudioScreen());
         }
-
-        if (FreecamKeybinds.REPLAY_PLAY_PAUSE != null && FreecamKeybinds.REPLAY_PLAY_PAUSE.isPressed()) {
-            ReplayManager.togglePause();
-        }
-
-        if (FreecamKeybinds.REPLAY_POV != null && FreecamKeybinds.REPLAY_POV.isPressed()) {
-            ReplayManager.toggleView();
-        }
+        if (FreecamKeybinds.REPLAY_PLAY_PAUSE.isPressed()) ReplayManager.togglePause();
+        if (FreecamKeybinds.REPLAY_POV.isPressed()) ReplayManager.cycleView();
+        if (FreecamKeybinds.REPLAY_MARKER.isPressed()) ReplayManager.addMarker();
+        if (FreecamKeybinds.REPLAY_KEYFRAME.isPressed()) ReplayManager.addKeyframe();
+        if (FreecamKeybinds.REPLAY_THUMBNAIL.isPressed()) ReplayManager.captureThumbnail();
+        if (FreecamKeybinds.REPLAY_HUD.isPressed()) ReplayHudRenderer.toggle();
 
         if (ReplayManager.isPlaying()) {
             handleReplayArrowKeys();
@@ -258,7 +224,7 @@ public final class FreecamClient {
             lockedHotbar = -1;
         }
 
-        boolean resetDown = FreecamKeybinds.RESET_TRIPOD != null && FreecamKeybinds.RESET_TRIPOD.isKeyDown();
+        boolean resetDown = FreecamKeybinds.RESET_TRIPOD.isKeyDown();
 
         for (int i = 0; i < 9; i++) {
             if (!numberDown(i)) continue;
@@ -275,7 +241,6 @@ public final class FreecamClient {
                 resetCombo = true;
                 if (lockedHotbar < 0) lockedHotbar = MC.player.inventory.currentItem;
                 TRIPODS[i] = null;
-
                 if (enabled && tripodActive && activeTripod == i) {
                     tripodActive = false;
                     activeTripod = -1;
@@ -285,45 +250,38 @@ public final class FreecamClient {
         }
 
         lastNumberMask = currentNumberMask();
+        if ((down || resetDown) && lockedHotbar >= 0) MC.player.inventory.currentItem = lockedHotbar;
 
-        if ((down || resetDown) && lockedHotbar >= 0) {
-            MC.player.inventory.currentItem = lockedHotbar;
-        }
-
-        if (FreecamKeybinds.PLAYER_CONTROL != null && FreecamKeybinds.PLAYER_CONTROL.isPressed()) {
+        if (FreecamKeybinds.PLAYER_CONTROL.isPressed()) {
             playerControl = !playerControl;
-            if (!playerControl && MC.player != null) restoreRotation(MC.player);
+            if (!playerControl) restoreRotation(MC.player);
             notify(playerControl ? "Player control enabled" : "Player control disabled", TextFormatting.AQUA);
         }
 
-        if (!down && !resetDown && resetCombo) resetCombo = false;
+        if (!down && !resetDown) resetCombo = false;
     }
 
     private static void handleReplayArrowKeys() {
         try {
-            long handle = MC.getMainWindow().getHandle();
-            boolean left = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT) == GLFW.GLFW_PRESS;
-            boolean right = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT) == GLFW.GLFW_PRESS;
-            boolean up = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_UP) == GLFW.GLFW_PRESS;
-            boolean down = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS;
+            long h = MC.getMainWindow().getHandle();
+            boolean left = GLFW.glfwGetKey(h, GLFW.GLFW_KEY_LEFT) == GLFW.GLFW_PRESS;
+            boolean right = GLFW.glfwGetKey(h, GLFW.GLFW_KEY_RIGHT) == GLFW.GLFW_PRESS;
+            boolean up = GLFW.glfwGetKey(h, GLFW.GLFW_KEY_UP) == GLFW.GLFW_PRESS;
+            boolean down = GLFW.glfwGetKey(h, GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS);
 
             if (left && !replayLeftHeld) ReplayManager.seek(-20);
             if (right && !replayRightHeld) ReplayManager.seek(20);
-            if (up && !replayUpHeld) ReplayManager.setSpeed(ReplayManager.getSpeed() + 0.25D);
-            if (down && !replayDownHeld) ReplayManager.setSpeed(ReplayManager.getSpeed() - 0.25D);
+            if (up && !replayUpHeld) ReplayManager.setSpeed(ReplayManager.getSpeed() + .25D);
+            if (down && !replayDownHeld) ReplayManager.setSpeed(ReplayManager.getSpeed() - .25D);
 
             replayLeftHeld = left;
             replayRightHeld = right;
             replayUpHeld = up;
             replayDownHeld = down;
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
     }
 
-    private static void toggle() {
-        if (enabled) disable(false);
-        else enable(false, -1);
-    }
+    private static void toggle() { if (enabled) disable(false); else enable(false, -1); }
 
     private static void enable(boolean tripod, int slot) {
         ClientPlayerEntity p = MC.player;
@@ -341,13 +299,9 @@ public final class FreecamClient {
             playerControl = false;
             tripodActive = tripod;
             activeTripod = tripod ? slot : -1;
-            lockedHotbar = -1;
 
             camera = new FreecamCamera(w, p.getGameProfile());
-            camera.setPositionAndRotation(
-                    p.getPosX(), p.getPosYEye(), p.getPosZ(),
-                    p.rotationYaw, p.rotationPitch
-            );
+            camera.setPositionAndRotation(p.getPosX(), p.getPosYEye(), p.getPosZ(), p.rotationYaw, p.rotationPitch);
             camera.prevPosX = camera.getPosX();
             camera.prevPosY = camera.getPosY();
             camera.prevPosZ = camera.getPosZ();
@@ -378,12 +332,10 @@ public final class FreecamClient {
                 if (tripodActive && activeTripod >= 0 && camera != null) savePose(activeTripod);
                 restoreRotation(p);
             }
-
             if (MC.player != null) {
                 MC.setRenderViewEntity(MC.player);
                 MC.gameSettings.thirdPersonView = oldPerspective;
             }
-
             if (!lifecycle) notify("Freecam disabled", TextFormatting.AQUA);
         } catch (Throwable ignored) {
         } finally {
@@ -403,7 +355,6 @@ public final class FreecamClient {
 
     private static void enterTripod(int slot) {
         if (slot < 0 || slot > 8) return;
-
         if (!enabled) {
             enable(true, slot);
             return;
@@ -424,86 +375,52 @@ public final class FreecamClient {
 
     private static void savePose(int slot) {
         if (camera == null || slot < 0 || slot > 8) return;
-        TRIPODS[slot] = new TripodPose(
-                camera.getPosX(), camera.getPosY(), camera.getPosZ(),
-                camera.rotationYaw, camera.rotationPitch
-        );
+        TRIPODS[slot] = new TripodPose(camera.getPosX(), camera.getPosY(), camera.getPosZ(), camera.rotationYaw, camera.rotationPitch);
     }
 
-    private static void applyPose(TripodPose pose) {
-        if (camera == null || pose == null) return;
-        camera.setPositionAndRotation(pose.x, pose.y, pose.z, pose.yaw, pose.pitch);
-        camera.prevPosX = pose.x;
-        camera.prevPosY = pose.y;
-        camera.prevPosZ = pose.z;
-        camera.prevRotationYaw = pose.yaw;
-        camera.prevRotationPitch = pose.pitch;
+    private static void applyPose(TripodPose p) {
+        if (camera == null || p == null) return;
+        camera.setPositionAndRotation(p.x, p.y, p.z, p.yaw, p.pitch);
+        camera.prevPosX = p.x; camera.prevPosY = p.y; camera.prevPosZ = p.z;
+        camera.prevRotationYaw = p.yaw; camera.prevRotationPitch = p.pitch;
     }
 
     private static int currentNumberMask() {
-        int mask = 0;
-        for (int i = 0; i < 9; i++) {
-            if (numberDown(i)) mask |= 1 << i;
-        }
-        return mask;
+        int m = 0;
+        for (int i = 0; i < 9; i++) if (numberDown(i)) m |= 1 << i;
+        return m;
     }
 
     private static boolean numberDown(int slot) {
-        try {
-            long handle = MC.getMainWindow().getHandle();
-            return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_1 + slot) == GLFW.GLFW_PRESS;
-        } catch (Throwable ignored) {
-            return false;
-        }
+        try { return GLFW.glfwGetKey(MC.getMainWindow().getHandle(), GLFW.GLFW_KEY_1 + slot) == GLFW.GLFW_PRESS; }
+        catch (Throwable ignored) { return false; }
     }
 
-    private static int pPerspective() {
-        int v = MC.gameSettings.thirdPersonView;
-        return v == 1 || v == 2 ? v : 0;
-    }
+    private static int pPerspective() { int v = MC.gameSettings.thirdPersonView; return v == 1 || v == 2 ? v : 0; }
 
     private static void applyInitialPerspective() {
         try {
             switch (FreecamConfig.INITIAL_PERSPECTIVE.get()) {
-                case THIRD_PERSON:
-                    MC.gameSettings.thirdPersonView = 1;
-                    break;
-                case THIRD_PERSON_MIRROR:
-                    MC.gameSettings.thirdPersonView = 2;
-                    break;
-                default:
-                    MC.gameSettings.thirdPersonView = 0;
-                    break;
+                case THIRD_PERSON: MC.gameSettings.thirdPersonView = 1; break;
+                case THIRD_PERSON_MIRROR: MC.gameSettings.thirdPersonView = 2; break;
+                default: MC.gameSettings.thirdPersonView = 0;
             }
-        } catch (Throwable ignored) {
-            MC.gameSettings.thirdPersonView = 0;
-        }
+        } catch (Throwable ignored) { MC.gameSettings.thirdPersonView = 0; }
     }
 
     private static void restoreRotation(ClientPlayerEntity p) {
-        p.rotationYaw = lockedYaw;
-        p.prevRotationYaw = lockedYaw;
-        p.rotationPitch = lockedPitch;
-        p.prevRotationPitch = lockedPitch;
-        p.rotationYawHead = lockedHeadYaw;
-        p.prevRotationYawHead = lockedHeadYaw;
-        p.renderYawOffset = lockedBodyYaw;
-        p.prevRenderYawOffset = lockedBodyYaw;
+        p.rotationYaw = lockedYaw; p.prevRotationYaw = lockedYaw;
+        p.rotationPitch = lockedPitch; p.prevRotationPitch = lockedPitch;
+        p.rotationYawHead = lockedHeadYaw; p.prevRotationYawHead = lockedHeadYaw;
+        p.renderYawOffset = lockedBodyYaw; p.prevRenderYawOffset = lockedBodyYaw;
     }
 
     private static void moveCamera(ClientWorld w) {
         if (camera == null) return;
+        camera.prevPosX = camera.getPosX(); camera.prevPosY = camera.getPosY(); camera.prevPosZ = camera.getPosZ();
+        camera.prevRotationYaw = camera.rotationYaw; camera.prevRotationPitch = camera.rotationPitch;
 
-        camera.prevPosX = camera.getPosX();
-        camera.prevPosY = camera.getPosY();
-        camera.prevPosZ = camera.getPosZ();
-        camera.prevRotationYaw = camera.rotationYaw;
-        camera.prevRotationPitch = camera.rotationPitch;
-
-        double x = 0;
-        double y = 0;
-        double z = 0;
-
+        double x=0,y=0,z=0;
         if (down(MC.gameSettings.keyBindLeft)) x--;
         if (down(MC.gameSettings.keyBindRight)) x++;
         if (down(MC.gameSettings.keyBindForward)) z++;
@@ -511,125 +428,51 @@ public final class FreecamClient {
         if (down(MC.gameSettings.keyBindJump)) y++;
         if (down(MC.gameSettings.keyBindSneak)) y--;
 
-        Vector3d input = new Vector3d(x, y, z);
+        Vector3d in = new Vector3d(x,y,z);
+        if (in.lengthSquared() > 0) {
+            in = in.normalize();
+            double r=Math.toRadians(camera.rotationYaw), sin=Math.sin(r), cos=Math.cos(r);
+            in = new Vector3d(in.x*cos-in.z*sin,in.y,in.z*cos+in.x*sin);
+        } else in=Vector3d.ZERO;
 
-        if (input.lengthSquared() > 0) {
-            input = input.normalize();
-            double r = Math.toRadians(camera.rotationYaw);
-            double sin = Math.sin(r);
-            double cos = Math.cos(r);
-            input = new Vector3d(
-                    input.x * cos - input.z * sin,
-                    input.y,
-                    input.z * cos + input.x * sin
-            );
-        } else {
-            input = Vector3d.ZERO;
-        }
+        double hs=safe(FreecamConfig.HORIZONTAL_SPEED.get(),1D), vs=safe(FreecamConfig.VERTICAL_SPEED.get(),1D);
+        if (FreecamConfig.FLIGHT_MODE.get()==FreecamConfig.FlightMode.CREATIVE) {
+            velocity=velocity.scale(.90D).add(in.mul(hs*.25D,vs*.25D,hs*.25D));
+        } else velocity=new Vector3d(in.x*hs,in.y*vs,in.z*hs);
 
-        double hs = safe(FreecamConfig.HORIZONTAL_SPEED.get(), 1D);
-        double vs = safe(FreecamConfig.VERTICAL_SPEED.get(), 1D);
-
-        if (FreecamConfig.FLIGHT_MODE.get() == FreecamConfig.FlightMode.CREATIVE) {
-            velocity = velocity.scale(0.90D)
-                    .add(input.mul(hs * 0.25D, vs * 0.25D, hs * 0.25D));
-        } else {
-            velocity = new Vector3d(input.x * hs, input.y * vs, input.z * hs);
-        }
-
-        Vector3d from = camera.getPositionVec();
-        Vector3d to = from.add(velocity);
-
-        if (!FreecamConfig.IGNORE_ALL_COLLISION.get()) {
-            to = collide(w, from, to);
-        }
-
-        camera.setPosition(to.x, to.y, to.z);
+        Vector3d from=camera.getPositionVec(), to=from.add(velocity);
+        if (!FreecamConfig.IGNORE_ALL_COLLISION.get()) to=collide(w,from,to);
+        camera.setPosition(to.x,to.y,to.z);
     }
 
-    private static Vector3d collide(ClientWorld w, Vector3d from, Vector3d to) {
-        Vector3d out = from;
-        out = moveAxis(w, out, new Vector3d(to.x, out.y, out.z));
-        out = moveAxis(w, out, new Vector3d(out.x, out.y, to.z));
-        out = moveAxis(w, out, new Vector3d(out.x, to.y, out.z));
+    private static Vector3d collide(ClientWorld w,Vector3d from,Vector3d to){
+        Vector3d out=from;
+        out=moveAxis(w,out,new Vector3d(to.x,out.y,out.z));
+        out=moveAxis(w,out,new Vector3d(out.x,out.y,to.z));
+        out=moveAxis(w,out,new Vector3d(out.x,to.y,out.z));
         return out;
     }
-
-    private static Vector3d moveAxis(ClientWorld w, Vector3d a, Vector3d b) {
-        Vector3d d = b.subtract(a);
-        int n = Math.max(1, (int) Math.ceil(d.length() / 0.20D));
-        Vector3d cur = a;
-
-        for (int i = 1; i <= n; i++) {
-            Vector3d next = a.add(d.scale((double) i / (double) n));
-            if (blocked(w, next)) return cur;
-            cur = next;
-        }
-        return cur;
+    private static Vector3d moveAxis(ClientWorld w,Vector3d a,Vector3d b){
+        Vector3d d=b.subtract(a); int n=Math.max(1,(int)Math.ceil(d.length()/.20D)); Vector3d cur=a;
+        for(int i=1;i<=n;i++){Vector3d next=a.add(d.scale((double)i/n));if(blocked(w,next))return cur;cur=next;}return cur;
     }
-
-    private static boolean blocked(ClientWorld w, Vector3d c) {
-        double r = 0.16D;
-        AxisAlignedBB box = new AxisAlignedBB(
-                c.x - r, c.y - r, c.z - r,
-                c.x + r, c.y + r, c.z + r
-        );
-
-        BlockPos min = new BlockPos(Math.floor(c.x - r), Math.floor(c.y - r), Math.floor(c.z - r));
-        BlockPos max = new BlockPos(Math.floor(c.x + r), Math.floor(c.y + r), Math.floor(c.z + r));
-
-        for (int x = min.getX(); x <= max.getX(); x++) {
-            for (int y = min.getY(); y <= max.getY(); y++) {
-                for (int z = min.getZ(); z <= max.getZ(); z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
-                    BlockState state = w.getBlockState(pos);
-                    if (!collides(state)) continue;
-
-                    try {
-                        for (AxisAlignedBB shape : state.getCollisionShape(w, pos).toBoundingBoxList()) {
-                            if (box.intersects(shape.offset(x, y, z))) return true;
-                        }
-                    } catch (Throwable ignored) {
-                    }
-                }
-            }
-        }
-        return false;
+    private static boolean blocked(ClientWorld w,Vector3d c){
+        double r=.16D;
+        AxisAlignedBB box=new AxisAlignedBB(c.x-r,c.y-r,c.z-r,c.x+r,c.y+r,c.z+r);
+        BlockPos min=new BlockPos(Math.floor(c.x-r),Math.floor(c.y-r),Math.floor(c.z-r));
+        BlockPos max=new BlockPos(Math.floor(c.x+r),Math.floor(c.y+r),Math.floor(c.z+r));
+        for(int x=min.getX();x<=max.getX();x++)for(int y=min.getY();y<=max.getY();y++)for(int z=min.getZ();z<=max.getZ();z++){
+            BlockPos pos=new BlockPos(x,y,z); BlockState s=w.getBlockState(pos); if(!collides(s))continue;
+            try{for(AxisAlignedBB shape:s.getCollisionShape(w,pos).toBoundingBoxList())if(box.intersects(shape.offset(x,y,z)))return true;}catch(Throwable ignored){}
+        } return false;
     }
-
-    private static boolean collides(BlockState state) {
-        if (state == null || state.isAir()) return false;
-        Block block = state.getBlock();
-
-        if (FreecamConfig.IGNORE_OPENABLE.get()
-                && (block instanceof DoorBlock
-                || block instanceof TrapDoorBlock
-                || block instanceof FenceGateBlock)) {
-            return false;
-        }
-
-        return !FreecamConfig.IGNORE_TRANSPARENT.get() || state.getMaterial().isOpaque();
+    private static boolean collides(BlockState s){
+        if(s==null||s.isAir())return false; Block b=s.getBlock();
+        if(FreecamConfig.IGNORE_OPENABLE.get()&&(b instanceof DoorBlock||b instanceof TrapDoorBlock||b instanceof FenceGateBlock))return false;
+        return !FreecamConfig.IGNORE_TRANSPARENT.get()||s.getMaterial().isOpaque();
     }
-
-    private static boolean down(KeyBinding key) {
-        return key != null && key.isKeyDown();
-    }
-
-    private static double safe(double value, double fallback) {
-        return Double.isFinite(value) && value > 0D ? value : fallback;
-    }
-
-    private static void notify(String message, TextFormatting color) {
-        try {
-            if (FreecamConfig.NOTIFICATIONS.get() && MC.player != null) {
-                MC.player.sendStatusMessage(
-                        new StringTextComponent(color + "Freecam: " + message), true);
-            }
-        } catch (Throwable ignored) {
-        }
-    }
-
-    public static void clearTripods() {
-        Arrays.fill(TRIPODS, null);
-    }
+    private static boolean down(KeyBinding k){return k!=null&&k.isKeyDown();}
+    private static double safe(double v,double f){return Double.isFinite(v)&&v>0?v:f;}
+    private static void notify(String s,TextFormatting c){try{if(FreecamConfig.NOTIFICATIONS.get()&&MC.player!=null)MC.player.sendStatusMessage(new StringTextComponent(c+"Freecam: "+s),true);}catch(Throwable ignored){}}
+    public static void clearTripods(){Arrays.fill(TRIPODS,null);}
 }
