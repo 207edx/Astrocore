@@ -43,7 +43,7 @@ public final class ReplayHudRenderer extends AbstractGui {
         button(m, left + 244, top + 6, left + 279, top + 24, "M", 0xFFB36E);
         button(m, left + 284, top + 6, left + 322, top + 24, "IMG", 0xE4D88C);
         button(m, left + 327, top + 6, left + 356, top + 24, "HUD", 0xBFC7CF);
-        drawString(m, MC.font, "Replay Studio", right - 83, top + 11, 0x9BA7B0);
+        drawString(m, MC.fontRenderer, "Replay Studio", right - 83, top + 11, 0x9BA7B0);
 
         fill(m, left + 8, barTop, right - 8, barTop + 12, 0xFF252C33);
         int total = Math.max(1, ReplayManager.getFrameCount() - 1);
@@ -62,16 +62,16 @@ public final class ReplayHudRenderer extends AbstractGui {
 
         String now = time(ReplayManager.getFrameIndex() / 20D);
         String end = time(ReplayManager.getDurationSeconds());
-        drawString(m, MC.font, now, left + 8, top + 46, 0xA6B0B7);
-        drawString(m, MC.font, end, right - MC.font.getStringWidth(end) - 8, top + 46, 0xA6B0B7);
+        drawString(m, MC.fontRenderer, now, left + 8, top + 46, 0xA6B0B7);
+        drawString(m, MC.fontRenderer, end, right - MC.fontRenderer.getStringWidth(end) - 8, top + 46, 0xA6B0B7);
 
         String controls = "P Pause • O POV • M Marker • K Keyframe • T Image • H HUD • ←/→ Seek • ↑/↓ Speed";
-        drawCenteredString(m, MC.font, new StringTextComponent(controls), w / 2, h - 14, 0xD2D8DC);
+        drawCenteredString(m, MC.fontRenderer, new StringTextComponent(controls), w / 2, h - 14, 0xD2D8DC);
     }
 
     private static void button(MatrixStack m, int x1, int y1, int x2, int y2, String label, int color) {
         fill(m, x1, y1, x2, y2, 0xFF232A31);
-        drawCenteredString(m, MC.font, new StringTextComponent(label), (x1+x2)/2, y1+6, color);
+        drawCenteredString(m, MC.fontRenderer, new StringTextComponent(label), (x1+x2)/2, y1+6, color);
     }
 
     @SubscribeEvent
