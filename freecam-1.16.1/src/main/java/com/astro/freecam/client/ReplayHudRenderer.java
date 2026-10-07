@@ -87,7 +87,7 @@ public final class ReplayHudRenderer extends AbstractGui {
         int left = 12, right = gw - 12, top = 8;
 
         if (box(gx, gy, left + 7, top + 6, left + 34, top + 24)) ReplayManager.togglePause();
-        else if (box(gx, gy, left + 39, top + 6, left + 95, top + 24)) ReplayManager.stepSpeed(0.25D);
+        else if (box(gx, gy, left + 39, top + 6, left + 95, top + 24)) ReplayManager.setSpeed(ReplayManager.getSpeed() + 0.25D);
         else if (box(gx, gy, left + 100, top + 6, left + 202, top + 24)) ReplayManager.cycleView();
         else if (box(gx, gy, left + 207, top + 6, left + 239, top + 24)) ReplayManager.addKeyframe();
         else if (box(gx, gy, left + 244, top + 6, left + 279, top + 24)) ReplayManager.addMarker();
