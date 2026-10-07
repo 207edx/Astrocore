@@ -39,12 +39,12 @@ dependencies {
 jar {
     manifest {
         attributes([
-            'Specification-Title': 'Freecam + Replay',
-            'Specification-Vendor': 'Astro Freecam',
-            'Specification-Version': '1',
+            'Specification-Title': 'Astro Freecam + Replay',
+            'Specification-Vendor': 'Astro',
+            'Specification-Version': '2',
             'Implementation-Title': project.name,
             'Implementation-Version': project.version,
-            'Implementation-Vendor': 'Astro Freecam'
+            'Implementation-Vendor': 'Astro'
         ])
     }
 }
@@ -52,8 +52,8 @@ jar {
 jar.finalizedBy('reobfJar')
 
 task sourceZip(type: Zip) {
-    archiveBaseName = 'freecam-' + project.version + '-source'
-    destinationDirectory = file("$buildDir/distributions")
+    archiveBaseName = 'astro-freecam-' + project.version + '-source'
+    destinationDirectory = file("${buildDir}/distributions")
     from(project.projectDir) {
         exclude 'build/**'
         exclude 'run/**'
