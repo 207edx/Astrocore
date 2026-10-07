@@ -1,10 +1,14 @@
 {
-  "key.categories.freecam": "Freecam",
+  "key.categories.freecam": "Astro Freecam & Replay",
   "key.freecam.toggle": "Toggle Freecam",
   "key.freecam.player_control": "Player Control",
   "key.freecam.reset_tripod": "Reset Tripod",
   "key.freecam.replay_record": "Start/Stop Replay Recording",
-  "key.freecam.replay_manager": "Replay Manager",
-  "key.freecam.replay_play_pause": "Replay Play/Pause",
-  "key.freecam.replay_pov": "Replay POV"
+  "key.freecam.replay_manager": "Open Replay Studio",
+  "key.freecam.replay_play_pause": "Replay Pause/Play",
+  "key.freecam.replay_pov": "Cycle Replay POV",
+  "key.freecam.replay_marker": "Add Replay Marker",
+  "key.freecam.replay_keyframe": "Add Camera Keyframe",
+  "key.freecam.replay_thumbnail": "Capture Replay Image",
+  "key.freecam.replay_hud": "Toggle Replay HUD"
 }
