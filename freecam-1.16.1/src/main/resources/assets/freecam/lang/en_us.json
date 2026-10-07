@@ -2,5 +2,9 @@
   "key.categories.freecam": "Freecam",
   "key.freecam.toggle": "Toggle Freecam",
   "key.freecam.player_control": "Player Control",
-  "key.freecam.reset_tripod": "Reset Tripod"
+  "key.freecam.reset_tripod": "Reset Tripod",
+  "key.freecam.replay_record": "Start/Stop Replay Recording",
+  "key.freecam.replay_manager": "Replay Manager",
+  "key.freecam.replay_play_pause": "Replay Play/Pause",
+  "key.freecam.replay_pov": "Replay POV"
 }
