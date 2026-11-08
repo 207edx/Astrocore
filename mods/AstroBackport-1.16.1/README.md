@@ -15,6 +15,6 @@ No Java, Gradle, or source setup is needed on your PC.
 
 ## Source archive
 
-`source.tar.gz.b64` is the gzip-compressed source tree encoded as Base64 so it can be stored through GitHub's text-file interface. The workflow decodes and extracts it before compiling.
+`source.tar.gz.b64.part-00` through `source.tar.gz.b64.part-07` are consecutive Base64 chunks of the gzip-compressed source tree. The workflow concatenates them in filename order before decoding and extracting. The workflow decodes and extracts it before compiling.
 
 The archive includes the source, ForgeGradle build files, resources, and editable texture-pack files. It deliberately excludes the optional prebuilt client helper JAR.
