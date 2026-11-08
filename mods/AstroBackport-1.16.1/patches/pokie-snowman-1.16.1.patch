@@ -1,0 +1,25 @@
+--- a/src/main/java/com/astro/backport/entity/PokieSnowmanEntity.java
++++ b/src/main/java/com/astro/backport/entity/PokieSnowmanEntity.java
+@@
+-    protected void readAdditional(CompoundNBT compound) {
++    public void readAdditional(CompoundNBT compound) {
+         super.readAdditional(compound);
+         this.commandedToSit = compound.getBoolean("AstroCommandedToSit");
+-        this.setSitting(this.commandedToSit);
++        this.func_233687_w_(this.commandedToSit);
+     }
+ 
+     @Override
+-    protected void writeAdditional(CompoundNBT compound) {
++    public void writeAdditional(CompoundNBT compound) {
+         super.writeAdditional(compound);
+         compound.putBoolean("AstroCommandedToSit", this.commandedToSit);
+     }
+ 
+     private void setCommandedToSit(boolean sitting) {
+         this.commandedToSit = sitting;
+-        this.setSitting(sitting);
++        this.func_233687_w_(sitting);
+         if (sitting) {
+             this.getNavigator().clearPath();
+         }
