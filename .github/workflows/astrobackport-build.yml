@@ -45,6 +45,9 @@ jobs:
           cat mods/AstroBackport-1.16.1/source.tar.gz.b64.part-* > "$RUNNER_TEMP/source.tar.gz.b64"
           base64 --decode "$RUNNER_TEMP/source.tar.gz.b64" | tar -xz -C "$RUNNER_TEMP/astrobackport"
 
+      - name: Apply 1.16.1 snow companion compatibility fix
+        run: python3 mods/AstroBackport-1.16.1/patches/fix_pokie_snowman.py "$RUNNER_TEMP/astrobackport/src/main/java/com/astro/backport/entity/PokieSnowmanEntity.java"
+
       - name: Build mod
         shell: bash
         working-directory: ${{ runner.temp }}/astrobackport
