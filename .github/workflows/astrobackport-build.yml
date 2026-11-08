@@ -42,7 +42,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/astrobackport"
-          base64 --decode mods/AstroBackport-1.16.1/source.tar.gz.b64 | tar -xz -C "$RUNNER_TEMP/astrobackport"
+          cat mods/AstroBackport-1.16.1/source.tar.gz.b64.part-* > "$RUNNER_TEMP/source.tar.gz.b64"
+          base64 --decode "$RUNNER_TEMP/source.tar.gz.b64" | tar -xz -C "$RUNNER_TEMP/astrobackport"
 
       - name: Build mod
         shell: bash
